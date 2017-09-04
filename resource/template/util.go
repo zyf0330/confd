@@ -3,7 +3,6 @@ package template
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/zyf0330/confd/log"
@@ -20,7 +19,7 @@ type fileInfo struct {
 func appendPrefix(prefix string, keys []string) []string {
 	s := make([]string, len(keys))
 	for i, k := range keys {
-		s[i] = path.Join(prefix, k)
+		s[i] = prefix + k
 	}
 	return s
 }
