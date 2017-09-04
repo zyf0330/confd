@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -175,7 +174,6 @@ func (t *TemplateResource) setVars() error {
 	var err error
 	log.Debug("Retrieving keys from store")
 	log.Debug("Key prefix set to " + t.Prefix)
-
 	result, err := t.storeClient.GetValues(appendPrefix(t.Prefix, t.Keys))
 	if err != nil {
 		return err
@@ -185,7 +183,7 @@ func (t *TemplateResource) setVars() error {
 	t.store.Purge()
 
 	for k, v := range result {
-		t.store.Set(path.Join("/", strings.TrimPrefix(k, t.Prefix)), v)
+		t.store.Set(strings.TrimPrefix(k, t.Prefix), v)
 	}
 	return nil
 }
