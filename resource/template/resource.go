@@ -91,10 +91,6 @@ func NewTemplateResource(path string, config Config) (*TemplateResource, error) 
 		tr.Prefix = config.Prefix
 	}
 
-	if !strings.HasPrefix(tr.Prefix, "/") {
-		tr.Prefix = "/" + tr.Prefix
-	}
-
 	if len(config.PGPPrivateKey) > 0 {
 		tr.PGPPrivateKey = config.PGPPrivateKey
 		addCryptFuncs(&tr)
