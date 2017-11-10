@@ -7,15 +7,14 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/BurntSushi/toml"
-	"github.com/kelseyhightower/confd/backends"
-	"github.com/kelseyhightower/confd/log"
+	"github.com/zyf0330/confd/backends"
+	"github.com/zyf0330/confd/log"
 	"github.com/kelseyhightower/memkv"
 	"github.com/xordataexchange/crypt/encoding/secconf"
 )
@@ -90,9 +89,9 @@ func NewTemplateResource(path string, config Config) (*TemplateResource, error) 
 	if config.Prefix != "" {
 		tr.Prefix = config.Prefix
 	}
-
+	
 	if !strings.HasPrefix(tr.Prefix, "/") {
-		tr.Prefix = "/" + tr.Prefix
+  	tr.Prefix = "/" + tr.Prefix
 	}
 
 	if len(config.PGPPrivateKey) > 0 {
@@ -174,7 +173,6 @@ func (t *TemplateResource) setVars() error {
 	var err error
 	log.Debug("Retrieving keys from store")
 	log.Debug("Key prefix set to " + t.Prefix)
-
 	result, err := t.storeClient.GetValues(appendPrefix(t.Prefix, t.Keys))
 	if err != nil {
 		return err
@@ -184,7 +182,7 @@ func (t *TemplateResource) setVars() error {
 	t.store.Purge()
 
 	for k, v := range result {
-		t.store.Set(path.Join("/", strings.TrimPrefix(k, t.Prefix)), v)
+		t.store.Set(strings.TrimPrefix(k, t.Prefix), v)
 	}
 	return nil
 }
