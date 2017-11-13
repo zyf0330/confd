@@ -32,6 +32,7 @@ var (
 	interval          int
 	keepStageFile     bool
 	logLevel          string
+	pprof             bool
 	nodes             Nodes
 	noop              bool
 	onetime           bool
@@ -95,6 +96,7 @@ func init() {
 	flag.IntVar(&interval, "interval", 600, "backend polling interval")
 	flag.BoolVar(&keepStageFile, "keep-stage-file", false, "keep staged files")
 	flag.StringVar(&logLevel, "log-level", "", "level which confd should log messages")
+	flag.BoolVar(&pprof, "pprof", false, "enable pprof debug")
 	flag.Var(&nodes, "node", "list of backend nodes")
 	flag.BoolVar(&noop, "noop", false, "only show pending changes")
 	flag.BoolVar(&onetime, "onetime", false, "run once and exit")

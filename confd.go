@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	_ "net/http/pprof"
 	"flag"
 	"fmt"
 	"os"
@@ -18,6 +20,12 @@ func main() {
 	if printVersion {
 		fmt.Printf("confd %s (Git SHA: %s, Go Version: %s)\n", Version, GitSHA, runtime.Version())
 		os.Exit(0)
+	}
+	if pprof {
+		log.Info("start pprof server at localhost:6060")
+		go func() {
+			log.Error(fmt.Sprintf("%s", http.ListenAndServe("localhost:6060", nil)))
+		}()
 	}
 	if err := initConfig(); err != nil {
 		log.Fatal(err.Error())
