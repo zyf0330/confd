@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zyf0330/confd/log"
 	"github.com/kelseyhightower/memkv"
 )
 
@@ -57,19 +58,23 @@ func newFuncMap() map[string]interface{} {
 func GetIP() string {
 	res, err := http.Get("https://log.duobeiyun.com/duobei-client/ipinfo")
 	if err != nil {
-		fmt.Printf("GetIP fail: %s\n", err)
+		log.Error("GetIP fail: %s\n", err)
 		return ""
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Printf("GetIP fail: %s\n", err)
+		log.Error("GetIP fail: %s\n", err)
 		return ""
 	}
 	jsonStr := string(body)
-	re := regexp.MustCompile("\"ip\":\"([\\d\\.]+)\"")
-	ip := re.FindStringSubmatch(jsonStr)[1]
-
+	re := regexp.MustCompile("\"ip\":\"([\\d.]+)\"")
+	matches := re.FindStringSubmatch(jsonStr)
+	if len(matches) == 0 {
+		log.Error("GetIP fail: get wrong response, json: %s\n", jsonStr)
+		return ""
+	}
+	ip := matches[1]
 	return ip
 }
 
