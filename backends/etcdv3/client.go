@@ -122,7 +122,7 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 
 	rch := client.Watch(ctx, prefix, clientv3.WithPrefix())
 
-	for wresp := range rch {
+	isChange := func(wresp clientv3.WatchResponse) int64 {
 		for _, ev := range wresp.Events {
 			log.Info("KV changed %s: %s", string(ev.Kv.Key), string(ev.Kv.Value))
 			// Only return if we have a key prefix we care about.
@@ -131,9 +131,26 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 			// is reducing the scope of keys that can trigger updates.
 			for _, k := range keys {
 				if strings.HasPrefix(string(ev.Kv.Key), k) {
-					return uint64(ev.Kv.Version), err
+					return ev.Kv.Version
 				}
 			}
+		}
+		return -1
+	}
+
+	var index int64 = -1
+	for {
+		select {
+		case <-time.After(time.Second * 5):
+			if index == -1 {
+				continue
+			}
+			return uint64(index), err
+		case wresp, ok := <-rch:
+			if !ok {
+				return 1, err
+			}
+			index = isChange(wresp)
 		}
 	}
 	return 0, err
