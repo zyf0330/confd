@@ -197,44 +197,12 @@ func initConfig() error {
 	}
 	if len(config.BackendNodes) == 0 {
 		switch config.Backend {
-		case "consul":
-			config.BackendNodes = []string{"127.0.0.1:8500"}
-		case "etcd":
-			peerstr := os.Getenv("ETCDCTL_PEERS")
-			if len(peerstr) > 0 {
-				config.BackendNodes = strings.Split(peerstr, ",")
-			} else {
-				config.BackendNodes = []string{"http://127.0.0.1:4001"}
-			}
 		case "etcdv3":
 			config.BackendNodes = []string{"127.0.0.1:2379"}
-		case "redis":
-			config.BackendNodes = []string{"127.0.0.1:6379"}
-		case "vault":
-			config.BackendNodes = []string{"http://127.0.0.1:8200"}
-		case "zookeeper":
-			config.BackendNodes = []string{"127.0.0.1:2181"}
 		}
 	}
 	// Initialize the storage client
 	log.Info("Backend set to " + config.Backend)
-
-	if config.Watch {
-		unsupportedBackends := map[string]bool{
-			"redis":    true,
-			"dynamodb": true,
-			"ssm":      true,
-		}
-
-		if unsupportedBackends[config.Backend] {
-			log.Info(fmt.Sprintf("Watch is not supported for backend %s. Exiting...", config.Backend))
-			os.Exit(1)
-		}
-	}
-
-	if config.Backend == "dynamodb" && config.Table == "" {
-		return errors.New("No DynamoDB table configured")
-	}
 
 	backendsConfig = backends.Config{
 		AuthToken:    config.AuthToken,

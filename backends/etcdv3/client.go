@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zyf0330/confd/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/kelseyhightower/confd/log"
 )
 
 // Client is a wrapper around the etcd client
@@ -123,7 +124,7 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
-			log.Debug("Key updated %s", string(ev.Kv.Key))
+			log.Info("KV changed %s: %s", string(ev.Kv.Key), string(ev.Kv.Value))
 			// Only return if we have a key prefix we care about.
 			// This is not an exact match on the key so there is a chance
 			// we will still pickup on false positives. The net win here
