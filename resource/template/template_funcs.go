@@ -1,6 +1,9 @@
 package template
 
 import (
+	"net/http"
+	"io/ioutil"
+	"regexp"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -47,7 +50,27 @@ func newFuncMap() map[string]interface{} {
 	m["mul"] = func(a, b int) int { return a * b }
 	m["seq"] = Seq
 	m["atoi"] = strconv.Atoi
+	m["getIP"] = GetIP
 	return m
+}
+
+func GetIP() string {
+	res, err := http.Get("https://log.duobeiyun.com/duobei-client/ipinfo")
+	if err != nil {
+		fmt.Printf("GetIP fail: %s\n", err)
+		return ""
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("GetIP fail: %s\n", err)
+		return ""
+	}
+	jsonStr := string(body)
+	re := regexp.MustCompile("\"ip\":\"([\\d\\.]+)\"")
+	ip := re.FindStringSubmatch(jsonStr)[1]
+
+	return ip
 }
 
 func addFuncs(out, in map[string]interface{}) {
