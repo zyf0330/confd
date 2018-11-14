@@ -56,7 +56,7 @@ func newFuncMap() map[string]interface{} {
 }
 
 func GetIP() string {
-	res, err := http.Get("http://log.duobeiyun.com/duobei-client/ipinfo")
+	res, err := http.Get("http://ipinfo.duobeiyun.com/duobei-client/ipinfo")
 	if err != nil {
 		log.Error("GetIP fail: %s\n", err)
 		return ""
