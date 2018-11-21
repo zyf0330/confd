@@ -35,7 +35,7 @@ func main() {
 
 	storeClient, err := backends.New(config.BackendsConfig)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("Backend create fail: %s", err.Error())
 	}
 
 	config.TemplateConfig.StoreClient = storeClient

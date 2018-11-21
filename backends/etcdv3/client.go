@@ -108,7 +108,7 @@ type Client struct {
 func NewEtcdClient(machines []string, cert, key, caCert string, basicAuth bool, username string, password string) (*Client, error) {
 	cfg := clientv3.Config{
 		Endpoints:            machines,
-		DialTimeout:          5 * time.Second,
+		DialTimeout:          10 * time.Second,
 		DialKeepAliveTime:    10 * time.Second,
 		DialKeepAliveTimeout: 3 * time.Second,
 	}
