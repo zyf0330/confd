@@ -17,8 +17,8 @@
     "mvcc/mvccpb",
     "pkg/types"
   ]
-  revision = "28f3f26c0e303392556035b694f75768d449d33d"
-  version = "v3.3.1"
+  revision = "fdde8705f5bf9a6d9dbfb0220caf2ee1ac816be8"
+  version = "v3.3.4"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -149,6 +149,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9327fb57fb36aa98730fc06896f74ea0308ccb1f545e2e7bc109a45da22517fe"
+  inputs-digest = "302e908534b4acb0fb0a8b5ce5ba86539dd57edc31bfc184c55f289defd5a492"
   solver-name = "gps-cdcl"
   solver-version = 1
