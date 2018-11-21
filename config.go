@@ -85,7 +85,7 @@ type Config struct {
 
 func init() {
 	flag.StringVar(&authToken, "auth-token", "", "Auth bearer token to use")
-	flag.StringVar(&backend, "backend", "etcd", "backend to use")
+	flag.StringVar(&backend, "backend", "etcdv3", "backend to use")
 	flag.BoolVar(&basicAuth, "basic-auth", false, "Use Basic Auth to authenticate (only used with -backend=consul and -backend=etcd)")
 	flag.StringVar(&clientCaKeys, "client-ca-keys", "", "client ca keys")
 	flag.StringVar(&clientCert, "client-cert", "", "the client cert")
@@ -129,7 +129,7 @@ func initConfig() error {
 	}
 	// Set defaults.
 	config = Config{
-		Backend:  "etcd",
+		Backend:  "etcdv3",
 		ConfDir:  "/etc/confd",
 		Interval: 600,
 		Prefix:   "",
@@ -177,29 +177,17 @@ func initConfig() error {
 	}
 
 	// Update BackendNodes from SRV records.
-	if config.Backend != "env" && config.SRVRecord != "" {
+	if config.SRVRecord != "" {
 		log.Info("SRV record set to " + config.SRVRecord)
 		srvNodes, err := getBackendNodesFromSRV(config.SRVRecord)
 		if err != nil {
 			return errors.New("Cannot get nodes from SRV records " + err.Error())
 		}
 
-		switch config.Backend {
-		case "etcd":
-			vsm := make([]string, len(srvNodes))
-			for i, v := range srvNodes {
-				vsm[i] = config.Scheme + "://" + v
-			}
-			srvNodes = vsm
-		}
-
 		config.BackendNodes = srvNodes
 	}
 	if len(config.BackendNodes) == 0 {
-		switch config.Backend {
-		case "etcdv3":
-			config.BackendNodes = []string{"127.0.0.1:2379"}
-		}
+		config.BackendNodes = []string{"127.0.0.1:2379"}
 	}
 	// Initialize the storage client
 	log.Info("Backend set to " + config.Backend)
