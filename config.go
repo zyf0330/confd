@@ -31,56 +31,56 @@ var (
 	config            Config // holds the global confd config.
 	interval          int
 	keepStageFile     bool
-	logLevel          string
-	pprof             bool
-	nodes             Nodes
-	noop              bool
-	onetime           bool
-	prefix            string
-	printVersion      bool
-	secretKeyring     string
-	scheme            string
-	srvDomain         string
-	srvRecord         string
-	syncOnly          bool
-	table             string
-	templateConfig    template.Config
-	backendsConfig    backends.Config
-	username          string
-	password          string
-	watch             bool
-	appID             string
-	userID            string
-	yamlFile          string
+	logLevel       string
+	pprof          bool
+	nodes          Nodes
+	noop           bool
+	onetime        bool
+	prefix         string
+	printVersion   bool
+	secretKeyring  string
+	scheme         string
+	srvDomain      string
+	srvRecord      string
+	syncOnly       bool
+	table          string
+	templateConfig template.Config
+	backendsConfig backends.Config
+	username       string
+	password       string
+	watch          bool
+	appID          string
+	userID         string
+	yamlFile       Nodes
 )
 
 // A Config structure is used to configure confd.
 type Config struct {
-	AuthToken     string   `toml:"auth_token"`
-	AuthType      string   `toml:"auth_type"`
-	Backend       string   `toml:"backend"`
-	BasicAuth     bool     `toml:"basic_auth"`
-	BackendNodes  []string `toml:"nodes"`
-	ClientCaKeys  string   `toml:"client_cakeys"`
-	ClientCert    string   `toml:"client_cert"`
-	ClientKey     string   `toml:"client_key"`
-	ConfDir       string   `toml:"confdir"`
-	Interval      int      `toml:"interval"`
+	AuthToken    string   `toml:"auth_token"`
+	AuthType     string   `toml:"auth_type"`
+	Backend      string   `toml:"backend"`
+	BasicAuth    bool     `toml:"basic_auth"`
+	BackendNodes []string `toml:"nodes"`
+	ClientCaKeys string   `toml:"client_cakeys"`
+	ClientCert   string   `toml:"client_cert"`
+	ClientKey    string   `toml:"client_key"`
+	ConfDir      string   `toml:"confdir"`
+	Interval     int      `toml:"interval"`
 	SecretKeyring string   `toml:"secret_keyring"`
-	Noop          bool     `toml:"noop"`
-	Password      string   `toml:"password"`
-	Prefix        string   `toml:"prefix"`
-	SRVDomain     string   `toml:"srv_domain"`
-	SRVRecord     string   `toml:"srv_record"`
-	Scheme        string   `toml:"scheme"`
-	SyncOnly      bool     `toml:"sync-only"`
-	Table         string   `toml:"table"`
-	Username      string   `toml:"username"`
-	LogLevel      string   `toml:"log-level"`
-	Watch         bool     `toml:"watch"`
-	AppID         string   `toml:"app_id"`
-	UserID        string   `toml:"user_id"`
-	YAMLFile      string   `toml:"file"`
+	Noop         bool     `toml:"noop"`
+	Password     string   `toml:"password"`
+	Prefix       string   `toml:"prefix"`
+	SRVDomain    string   `toml:"srv_domain"`
+	SRVRecord    string   `toml:"srv_record"`
+	Scheme       string   `toml:"scheme"`
+	SyncOnly     bool     `toml:"sync-only"`
+	Table        string   `toml:"table"`
+	Username     string   `toml:"username"`
+	LogLevel     string   `toml:"log-level"`
+	Watch        bool     `toml:"watch"`
+	AppID        string   `toml:"app_id"`
+	UserID       string   `toml:"user_id"`
+	YAMLFile     []string `toml:"file"`
 }
 
 func init() {
@@ -92,7 +92,7 @@ func init() {
 	flag.StringVar(&clientKey, "client-key", "", "the client key")
 	flag.StringVar(&confdir, "confdir", "/etc/confd", "confd conf directory")
 	flag.StringVar(&configFile, "config-file", "", "the confd config file")
-	flag.StringVar(&yamlFile, "file", "", "the YAML/JSON file to watch for changes")
+	flag.Var(&yamlFile, "file", "the YAML file to watch for changes (only used with -backend=file)")
 	flag.IntVar(&interval, "interval", 600, "backend polling interval")
 	flag.BoolVar(&keepStageFile, "keep-stage-file", false, "keep staged files")
 	flag.StringVar(&logLevel, "log-level", "", "level which confd should log messages")
