@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
-	_ "net/http/pprof"
 	"flag"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -17,11 +17,11 @@ import (
 
 func main() {
 	flag.Parse()
-	if printVersion {
+	if config.PrintVersion {
 		fmt.Printf("confd %s (Git SHA: %s, Go Version: %s)\n", Version, GitSHA, runtime.Version())
 		os.Exit(0)
 	}
-	if pprof {
+	if config.PProf {
 		log.Info("start pprof server at localhost:6060")
 		go func() {
 			log.Error(fmt.Sprintf("%s", http.ListenAndServe("localhost:6060", nil)))
@@ -33,14 +33,14 @@ func main() {
 
 	log.Info("Starting confd")
 
-	storeClient, err := backends.New(backendsConfig)
+	storeClient, err := backends.New(config.BackendsConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	templateConfig.StoreClient = storeClient
-	if onetime {
-		if err := template.Process(templateConfig); err != nil {
+	config.TemplateConfig.StoreClient = storeClient
+	if config.OneTime {
+		if err := template.Process(config.TemplateConfig); err != nil {
 			log.Fatal(err.Error())
 		}
 		os.Exit(0)
@@ -53,9 +53,9 @@ func main() {
 	var processor template.Processor
 	switch {
 	case config.Watch:
-		processor = template.WatchProcessor(templateConfig, stopChan, doneChan, errChan)
+		processor = template.WatchProcessor(config.TemplateConfig, stopChan, doneChan, errChan)
 	default:
-		processor = template.IntervalProcessor(templateConfig, stopChan, doneChan, errChan, config.Interval)
+		processor = template.IntervalProcessor(config.TemplateConfig, stopChan, doneChan, errChan, config.Interval)
 	}
 
 	go processor.Process()

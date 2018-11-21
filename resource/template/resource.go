@@ -14,21 +14,21 @@ import (
 	"text/template"
 
 	"github.com/BurntSushi/toml"
-	"github.com/zyf0330/confd/backends"
-	"github.com/zyf0330/confd/log"
-	util "github.com/zyf0330/confd/util"
 	"github.com/kelseyhightower/memkv"
 	"github.com/xordataexchange/crypt/encoding/secconf"
+	"github.com/zyf0330/confd/backends"
+	"github.com/zyf0330/confd/log"
+	"github.com/zyf0330/confd/util"
 )
 
 type Config struct {
-	ConfDir       string
+	ConfDir       string `toml:"confdir"`
 	ConfigDir     string
 	KeepStageFile bool
-	Noop          bool
-	Prefix        string
+	Noop          bool   `toml:"noop"`
+	Prefix        string `toml:"prefix"`
 	StoreClient   backends.StoreClient
-	SyncOnly      bool
+	SyncOnly      bool `toml:"sync-only"`
 	TemplateDir   string
 	PGPPrivateKey []byte
 }
