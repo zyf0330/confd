@@ -16,6 +16,7 @@ type StoreClient interface {
 
 // New is used to create a storage client based on our configuration.
 func New(config Config) (StoreClient, error) {
+
 	if config.Backend == "" {
 		config.Backend = "etcdv3"
 	}
