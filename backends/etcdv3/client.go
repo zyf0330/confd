@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ type Watch struct {
 }
 
 // Wait until revision is greater than lastRevision
-func (w *Watch) WaitNext(ctx context.Context, lastRevision int64, notify chan<-int64) {
+func (w *Watch) WaitNext(ctx context.Context, lastRevision int64, notify chan<- int64) {
 	for {
 		w.rwl.RLock()
 		if w.revision > lastRevision {
@@ -34,21 +35,21 @@ func (w *Watch) WaitNext(ctx context.Context, lastRevision int64, notify chan<-i
 		}
 		cond := w.cond
 		w.rwl.RUnlock()
-		select{
+		select {
 		case <-cond:
 		case <-ctx.Done():
 			return
 		}
 	}
 	// We accept larger revision, so do not need to use RLock
-	select{
-	case notify<-w.revision:
+	select {
+	case notify <- w.revision:
 	case <-ctx.Done():
 	}
 }
 
 // Update revision
-func (w *Watch) update(newRevision int64){
+func (w *Watch) update(newRevision int64) {
 	w.rwl.Lock()
 	defer w.rwl.Unlock()
 	w.revision = newRevision
@@ -60,7 +61,7 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 	w := &Watch{0, make(chan struct{}), sync.RWMutex{}}
 	go func() {
 		rch := client.Watch(context.Background(), prefix, clientv3.WithPrefix(),
-							clientv3.WithCreatedNotify())
+			clientv3.WithCreatedNotify())
 		log.Debug("Watch created on %s", prefix)
 		for {
 			for wresp := range rch {
@@ -75,6 +76,9 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 				}
 				if err := wresp.Err(); err != nil {
 					log.Error("Watch error: %s", err.Error())
+					if err.Error() == "rpc error: code = PermissionDenied desc = etcdserver: permission denied" {
+						os.Exit(1)
+					}
 				}
 			}
 			log.Warning("Watch to '%s' stopped at revision %d", prefix, w.revision)
@@ -85,11 +89,11 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 			// Start from next revision so we are not missing anything
 			if w.revision > 0 {
 				rch = client.Watch(context.Background(), prefix, clientv3.WithPrefix(),
-					clientv3.WithRev(w.revision + 1))
+					clientv3.WithRev(w.revision+1))
 			} else {
 				// Start from the latest revision
 				rch = client.Watch(context.Background(), prefix, clientv3.WithPrefix(),
-									clientv3.WithCreatedNotify())
+					clientv3.WithCreatedNotify())
 			}
 		}
 	}()
@@ -98,7 +102,7 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 
 // Client is a wrapper around the etcd client
 type Client struct {
-	client *clientv3.Client
+	client  *clientv3.Client
 	watches map[string]*Watch
 	// Protect watch
 	wm sync.Mutex
@@ -168,17 +172,17 @@ func (c *Client) GetValues(keys []string) (map[string]string, error) {
 	// maybe an option should be added (also set max-txn=0 can disable Txn?)
 	maxTxnOps := 128
 	getOps := make([]string, 0, maxTxnOps)
-	doTxn := func (ops []string) error {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3) * time.Second)
+	doTxn := func(ops []string) error {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 		defer cancel()
 
 		txnOps := make([]clientv3.Op, 0, maxTxnOps)
 
 		for _, k := range ops {
 			txnOps = append(txnOps, clientv3.OpGet(k,
-											   clientv3.WithPrefix(),
-											   clientv3.WithSort(clientv3.SortByKey, clientv3.SortDescend),
-											   clientv3.WithRev(first_rev)))
+				clientv3.WithPrefix(),
+				clientv3.WithSort(clientv3.SortByKey, clientv3.SortDescend),
+				clientv3.WithRev(first_rev)))
 		}
 
 		result, err := c.client.Txn(ctx).Then(txnOps...).Commit()
