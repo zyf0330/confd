@@ -28,7 +28,7 @@ integration:
 	done
 
 dep:
-	@dep ensure
+	@go mod vendor
 
 release:
 	@docker build -q -t confd_builder -f Dockerfile.build.alpine .

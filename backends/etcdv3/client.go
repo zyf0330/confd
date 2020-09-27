@@ -114,7 +114,8 @@ func NewEtcdClient(machines []string, cert, key, caCert string, basicAuth bool, 
 		Endpoints:            machines,
 		DialTimeout:          10 * time.Second,
 		DialKeepAliveTime:    10 * time.Second,
-		DialKeepAliveTimeout: 3 * time.Second,
+		DialKeepAliveTimeout: 4 * time.Second,
+		PermitWithoutStream: true,
 	}
 
 	if basicAuth {
