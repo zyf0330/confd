@@ -85,7 +85,7 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 			// Disconnected or cancelled
 			// Wait for a moment to avoid reconnecting
 			// too quickly
-			time.Sleep(time.Duration(1) * time.Second)
+			time.Sleep(1 * time.Second)
 			// Start from next revision so we are not missing anything
 			if w.revision > 0 {
 				rch = client.Watch(context.Background(), prefix, clientv3.WithPrefix(),
@@ -174,7 +174,7 @@ func (c *Client) GetValues(keys []string) (map[string]string, error) {
 	maxTxnOps := 128
 	getOps := make([]string, 0, maxTxnOps)
 	doTxn := func(ops []string) error {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 
 		txnOps := make([]clientv3.Op, 0, maxTxnOps)
@@ -243,17 +243,7 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 	c.wm.Unlock()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cancelRoutine := make(chan struct{})
 	defer cancel()
-	defer close(cancelRoutine)
-	go func() {
-		select {
-		case <-stopChan:
-			cancel()
-		case <-cancelRoutine:
-			return
-		}
-	}()
 
 	// KeepAlive manually
 	// interval and timeout value are same as etcd client grpc options
