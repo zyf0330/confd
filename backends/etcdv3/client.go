@@ -255,6 +255,23 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 		}
 	}()
 
+	// KeepAlive manually
+	// interval and timeout value are same as etcd client grpc options
+	go func() {
+		for {
+			select {
+			case <-time.After(10 * time.Second):
+				ctx, _ := context.WithTimeout(ctx, 4*time.Second)
+				if _, err := c.client.Get(ctx, "test", clientv3.WithCountOnly()); err != nil && err != context.Canceled {
+					log.Error("KeepAlive error: %s", err)
+					os.Exit(1)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	notify := make(chan int64)
 	// Wait for all watches
 	for _, v := range watches {
