@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 
@@ -57,7 +56,7 @@ func (w *Watch) update(newRevision int64) {
 	w.cond = make(chan struct{})
 }
 
-func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
+func createWatch(client *clientv3.Client, prefix string, doneChan chan bool) (*Watch, error) {
 	w := &Watch{0, make(chan struct{}), sync.RWMutex{}}
 	go func() {
 		rch := client.Watch(context.Background(), prefix, clientv3.WithPrefix(),
@@ -77,7 +76,9 @@ func createWatch(client *clientv3.Client, prefix string) (*Watch, error) {
 				if err := wresp.Err(); err != nil {
 					log.Error("Watch error: %s", err.Error())
 					if err.Error() == "rpc error: code = PermissionDenied desc = etcdserver: permission denied" {
-						os.Exit(1)
+						doneChan <- false
+						close(doneChan)
+						return
 					}
 				}
 			}
@@ -115,7 +116,7 @@ func NewEtcdClient(machines []string, cert, key, caCert string, basicAuth bool, 
 		DialTimeout:          10 * time.Second,
 		DialKeepAliveTime:    10 * time.Second,
 		DialKeepAliveTimeout: 4 * time.Second,
-		PermitWithoutStream: true,
+		PermitWithoutStream:  true,
 	}
 
 	if basicAuth {
@@ -222,7 +223,7 @@ func (c *Client) GetValues(keys []string) (map[string]string, error) {
 	return vars, nil
 }
 
-func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, stopChan chan bool) (uint64, error) {
+func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, stopChan chan bool, doneChan chan bool) (uint64, error) {
 	var err error
 
 	// Create watch for each key
@@ -231,7 +232,7 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 	for _, k := range keys {
 		watch, ok := c.watches[k]
 		if !ok {
-			watch, err = createWatch(c.client, k)
+			watch, err = createWatch(c.client, k, doneChan)
 			if err != nil {
 				c.wm.Unlock()
 				return 0, err
@@ -244,23 +245,6 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	// KeepAlive manually
-	// interval and timeout value are same as etcd client grpc options
-	go func(key string) {
-		for {
-			select {
-			case <-time.After(10 * time.Second):
-				ctx, _ := context.WithTimeout(ctx, 4*time.Second)
-				if _, err := c.client.Get(ctx, key, clientv3.WithCountOnly()); err != nil && err != context.Canceled {
-					log.Error("KeepAlive error: %s", err)
-					os.Exit(1)
-				}
-			case <-ctx.Done():
-				return
-			}
-		}
-	}(keys[0])
 
 	notify := make(chan int64)
 	// Wait for all watches
@@ -285,4 +269,24 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 	}
 
 	return 0, err
+}
+
+// 手动保活
+func (c *Client) KeepAlive(doneChan chan bool) {
+	log.Info("Start KeepAlive")
+	etcdClient := c.client
+	// interval and timeout value are same as etcd client grpc options
+	for {
+		select {
+		case <-time.After(10 * time.Second):
+			ctx, _ := context.WithTimeout(context.Background(), 4*time.Second)
+
+			if _, err := etcdClient.UserGet(ctx, etcdClient.Username); err != nil {
+				log.Error("KeepAlive By UserGet error: %s", err)
+				doneChan <- false
+				close(doneChan)
+				return
+			}
+		}
+	}
 }

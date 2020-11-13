@@ -50,6 +50,8 @@ func main() {
 	doneChan := make(chan bool)
 	errChan := make(chan error, 10)
 
+	go storeClient.KeepAlive(doneChan)
+
 	var processor template.Processor
 	switch {
 	case config.Watch:
@@ -68,9 +70,14 @@ func main() {
 			log.Error(err.Error())
 		case s := <-signalChan:
 			log.Info(fmt.Sprintf("Captured %v. Exiting...", s))
-			close(doneChan)
-		case <-doneChan:
 			os.Exit(0)
+		case normal := <-doneChan:
+			log.Info(fmt.Sprintf("Exiting caused by doneChan, normal: %v", normal))
+			if normal {
+				os.Exit(0)
+			} else {
+				os.Exit(1)
+			}
 		}
 	}
 }
