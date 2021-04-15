@@ -1,14 +1,13 @@
 package template
 
 import (
-	"net/http"
-	"io/ioutil"
-	"regexp"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"path"
 	"sort"
@@ -16,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	util "github.com/zyf0330/confd/util"
-	"github.com/zyf0330/confd/log"
 	"github.com/kelseyhightower/memkv"
+	"github.com/zyf0330/confd/log"
+	util "github.com/zyf0330/confd/util"
 )
 
 func newFuncMap() map[string]interface{} {
@@ -60,7 +59,7 @@ func newFuncMap() map[string]interface{} {
 }
 
 func GetIP() string {
-	res, err := http.Get("http://ipinfo.duobeiyun.com/duobei-client/ipinfo")
+	res, err := http.Get("http://ip.cip.cc")
 	if err != nil {
 		log.Error("GetIP fail: %s\n", err)
 		return ""
@@ -71,14 +70,8 @@ func GetIP() string {
 		log.Error("GetIP fail: %s\n", err)
 		return ""
 	}
-	jsonStr := string(body)
-	re := regexp.MustCompile("\"ip\":\"([\\d.]+)\"")
-	matches := re.FindStringSubmatch(jsonStr)
-	if len(matches) == 0 {
-		log.Error("GetIP fail: get wrong response, json: %s\n", jsonStr)
-		return ""
-	}
-	ip := matches[1]
+	bodyContent := string(body)
+	ip := strings.TrimSpace(bodyContent)
 	return ip
 }
 
